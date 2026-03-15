@@ -178,9 +178,11 @@ def sanitize_text(
         text = re.sub(pat, repl, text)
 
     # ---- Whitespace normalisation ----
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    text = re.sub(r"[ \t]+", " ", text)
-    text = re.sub(r" *\n *", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)       # 3+ newlines → paragraph break
+    text = re.sub(r"[ \t]+", " ", text)           # collapse spaces
+    # Single newlines are just PDF line-wraps — join them into prose.
+    # Double newlines (paragraph breaks) are preserved.
+    text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
 
     # ---- Markdown artefacts ----
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
