@@ -1,0 +1,5 @@
+kokoro[en]
+PyMuPDF
+soundfile
+tqdm
+numpy
