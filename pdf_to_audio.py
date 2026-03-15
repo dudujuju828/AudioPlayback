@@ -117,7 +117,6 @@ def sanitize_text(
 
     # ---- Headers / footers / page furniture ----
     for pat in [
-        r"(?m)^.*OPERATING SYSTEMS.*\[VERSION.*\].*$",
         r"(?m)^.*THREE EASY PIECES.*$",
         r"(?m)^.*WWW\.OSTEP\.ORG.*$",
         r"(?m)^.*OSTEP\.ORG.*$",
@@ -125,6 +124,8 @@ def sanitize_text(
         r"(?m)^\s*©.*$",
     ]:
         text = re.sub(pat, "", text, flags=re.IGNORECASE)
+    # Case-sensitive: catch all-caps page headers like "INTRODUCTION TO OPERATING SYSTEMS"
+    text = re.sub(r"(?m)^\d{0,4}\s*[A-Z\s]{2,}OPERATING SYSTEMS.*$", "", text)
 
     # Standalone page numbers
     text = re.sub(r"(?m)^\s*\d{1,4}\s*$", "", text)
@@ -183,6 +184,10 @@ def sanitize_text(
     # Single newlines are just PDF line-wraps — join them into prose.
     # Double newlines (paragraph breaks) are preserved.
     text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
+
+    # ---- Footnote paragraphs ----
+    # OSTEP-style: "1Of course..." or "10We'll use..." (digit(s) glued to text)
+    text = re.sub(r"(?m)^\d{1,2}[A-Z][^\n]+$", "", text)
 
     # ---- Markdown artefacts ----
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
