@@ -3,3 +3,6 @@ PyMuPDF
 soundfile
 tqdm
 numpy
+fastapi
+uvicorn[standard]
+python-multipart
