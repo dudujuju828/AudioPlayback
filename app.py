@@ -271,29 +271,44 @@ class QuizRequest(BaseModel):
     text: str
 
 
+def _run_quiz_generation(text: str) -> list[dict]:
+    """Run claude CLI locally to generate quiz questions."""
+    import json
+    proc = subprocess.run(
+        "claude -p",
+        input=QUIZ_PROMPT + text,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=180,
+        shell=True,
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.strip() or "claude exited with an error")
+    raw = proc.stdout.strip()
+    # Extract JSON array from response (handles markdown fences, preamble, etc.)
+    start = raw.find("[")
+    end = raw.rfind("]") + 1
+    if start < 0 or end <= start:
+        raise ValueError("No JSON array found in claude response")
+    return json.loads(raw[start:end])
+
+
 @app.post("/quiz/generate")
 async def generate_quiz(req: QuizRequest):
-    import json as _json
     try:
-        import anthropic
-    except ImportError:
+        questions = await asyncio.to_thread(_run_quiz_generation, req.text)
+        return questions
+    except FileNotFoundError:
         return JSONResponse(
-            {"error": "Run: pip install anthropic"}, status_code=500,
+            {"error": "claude CLI not found — is Claude Code installed?"}, status_code=500,
         )
-    try:
-        client = anthropic.AsyncAnthropic()
-        resp = await client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=4096,
-            messages=[{"role": "user", "content": QUIZ_PROMPT + req.text}],
-        )
-        raw = resp.content[0].text.strip()
-        if raw.startswith("```"):
-            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-        return _json.loads(raw)
+    except subprocess.TimeoutExpired:
+        return JSONResponse({"error": "Quiz generation timed out"}, status_code=500)
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
     except Exception as e:
-        name = type(e).__name__
-        return JSONResponse({"error": f"{name}: {e}"}, status_code=500)
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 if __name__ == "__main__":
