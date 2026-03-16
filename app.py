@@ -319,7 +319,17 @@ def _run_quiz_generation(text: str) -> list[dict]:
     end = raw.rfind("]") + 1
     if start < 0 or end <= start:
         raise ValueError("No JSON array found in claude response")
-    return json.loads(raw[start:end])
+    questions = json.loads(raw[start:end])
+
+    # Shuffle option positions so correct answer is evenly distributed
+    import random
+    for q in questions:
+        opts = q["options"]
+        correct_text = opts[q["correct"]]
+        random.shuffle(opts)
+        q["correct"] = opts.index(correct_text)
+
+    return questions
 
 
 @app.post("/quiz/generate")
