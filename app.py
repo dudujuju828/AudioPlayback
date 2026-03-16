@@ -252,16 +252,27 @@ async def ws_generate(ws: WebSocket):
 
 # ---- Quiz generation ----
 
-QUIZ_PROMPT = """Based on the following educational text, create exactly 10 multiple-choice \
-questions that test understanding of the key concepts.
+QUIZ_PROMPT = """You are generating a problem-solving quiz from educational material.
+
+Create exactly 10 multiple-choice questions. Every question MUST present a concrete \
+scenario, situation, or problem that requires reasoning — not just recall. Frame them \
+as "Given X, what happens?", "A system does Y — what is the result?", "An engineer \
+encounters Z — what should they do?", etc.
+
+CRITICAL formatting rules for answer options:
+- All 4 options must be the same length and style — a reader should NOT be able to \
+guess the correct answer just by noticing one option is longer, more detailed, or \
+more carefully worded than the others.
+- If one option uses a technical explanation, ALL options must use technical explanations.
+- If one option is short, ALL options must be short.
+- Avoid "all of the above" or "none of the above".
+- Randomize which position (0-3) is correct across questions — do not favor any slot.
 
 Return ONLY a JSON array (no markdown, no code fences) where each element has:
-- "question": the question text
-- "options": array of exactly 4 answer choices
+- "question": a scenario-based problem
+- "options": array of exactly 4 answers, all visually uniform in length and style
 - "correct": zero-based index of the correct option (0-3)
-- "explanation": brief explanation of why the answer is correct (1-2 sentences)
-
-Make questions progressively harder. Focus on core concepts, not trivia.
+- "explanation": brief explanation (1-2 sentences)
 
 Text:
 """
