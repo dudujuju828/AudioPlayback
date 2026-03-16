@@ -150,7 +150,13 @@ button { cursor: pointer; font-family: inherit; }
 .quiz-option.correct { border-color: #22c55e; background: rgba(34,197,94,0.08); }
 .quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.08); }
 .quiz-option.disabled { pointer-events: none; opacity: 0.7; }
-.quiz-option input[type="radio"] { margin-top: 0.2rem; accent-color: var(--primary); flex-shrink: 0; }
+.quiz-option-letter {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+}
+.quiz-option.correct .quiz-option-letter { background: #22c55e; color: #fff; }
+.quiz-option.incorrect .quiz-option-letter { background: #ef4444; color: #fff; }
 .quiz-explanation {
   margin-top: 0.75rem; padding: 0.75rem; background: rgba(99,102,241,0.06);
   border-left: 3px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0;
@@ -288,9 +294,10 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: v
       <div id="quiz-content" class="hidden">
         <div id="quiz-score" class="hidden"></div>
         <div id="quiz-questions"></div>
-        <button class="quiz-btn" id="check-quiz-btn">Check Answers</button>
-        <button class="quiz-btn hidden" id="retake-quiz-btn">Retake Quiz</button>
-        <button class="quiz-btn hidden" id="regen-quiz-btn" style="background:var(--surface-2);border:1px solid var(--border);margin-top:0.25rem;">Regenerate Quiz</button>
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+          <button class="quiz-btn hidden" id="retake-quiz-btn">Retake Quiz</button>
+          <button class="quiz-btn hidden" id="regen-quiz-btn" style="background:var(--surface-2);border:1px solid var(--border);">Regenerate Quiz</button>
+        </div>
       </div>
     </div>
   </div>
@@ -355,8 +362,7 @@ const quizContainer = $('#quiz-container'), quizEmpty = $('#quiz-empty'),
       quizLoading = $('#quiz-loading'), quizError = $('#quiz-error'),
       quizContent = $('#quiz-content'), quizQuestions = $('#quiz-questions'),
       quizScore = $('#quiz-score'), genQuizBtn = $('#gen-quiz-btn'),
-      checkQuizBtn = $('#check-quiz-btn'), retakeQuizBtn = $('#retake-quiz-btn'),
-      regenQuizBtn = $('#regen-quiz-btn');
+      retakeQuizBtn = $('#retake-quiz-btn'), regenQuizBtn = $('#regen-quiz-btn');
 
 const playPause = $('#play-pause-btn'), skipBack = $('#skip-back-btn'),
       skipFwd = $('#skip-fwd-btn'), scrubber = $('#scrubber'),
@@ -558,15 +564,17 @@ function updateActiveParagraph() {
    Quiz
    ================================================================ */
 genQuizBtn.addEventListener('click', generateQuiz);
-checkQuizBtn.addEventListener('click', checkQuiz);
 retakeQuizBtn.addEventListener('click', retakeQuiz);
 regenQuizBtn.addEventListener('click', generateQuiz);
+
+let quizCorrect = 0, quizAnswered = 0;
 
 async function generateQuiz() {
   quizEmpty.classList.add('hidden');
   quizError.classList.add('hidden');
   quizContent.classList.add('hidden');
   regenQuizBtn.classList.add('hidden');
+  retakeQuizBtn.classList.add('hidden');
   quizLoading.classList.remove('hidden');
 
   try {
@@ -580,7 +588,6 @@ async function generateQuiz() {
       throw new Error(err.error || 'Quiz generation failed');
     }
     state.quizData = await res.json();
-    state.quizChecked = false;
     renderQuiz();
   } catch (err) {
     quizLoading.classList.add('hidden');
@@ -592,23 +599,25 @@ async function generateQuiz() {
 function renderQuiz() {
   quizLoading.classList.add('hidden');
   quizQuestions.innerHTML = '';
-  quizScore.classList.add('hidden');
-  checkQuizBtn.classList.remove('hidden');
+  quizScore.classList.remove('hidden');
   retakeQuizBtn.classList.add('hidden');
   regenQuizBtn.classList.remove('hidden');
+  quizCorrect = 0; quizAnswered = 0;
+  updateScoreBar();
 
   state.quizData.forEach((q, qi) => {
     const card = document.createElement('div');
     card.className = 'quiz-question';
+    card.dataset.qi = qi;
     card.innerHTML = `
-      <div class="quiz-q-num">Question ${qi + 1}</div>
+      <div class="quiz-q-num">Question ${qi + 1} of ${state.quizData.length}</div>
       <div class="quiz-q-text">${esc(q.question)}</div>
       <div class="quiz-options">
         ${q.options.map((opt, oi) => `
-          <label class="quiz-option" data-qi="${qi}" data-oi="${oi}">
-            <input type="radio" name="q${qi}" value="${oi}">
+          <div class="quiz-option" data-qi="${qi}" data-oi="${oi}">
+            <span class="quiz-option-letter">${'ABCD'[oi]}</span>
             <span>${esc(opt)}</span>
-          </label>
+          </div>
         `).join('')}
       </div>
       <div class="quiz-explanation hidden">${esc(q.explanation)}</div>
@@ -616,44 +625,54 @@ function renderQuiz() {
     quizQuestions.appendChild(card);
   });
 
+  // Instant feedback on click
+  quizQuestions.addEventListener('click', onOptionClick);
   quizContent.classList.remove('hidden');
 }
 
-function checkQuiz() {
-  if (!state.quizData) return;
-  state.quizChecked = true;
-  let correct = 0;
+function onOptionClick(e) {
+  const opt = e.target.closest('.quiz-option');
+  if (!opt || opt.classList.contains('disabled')) return;
 
-  state.quizData.forEach((q, qi) => {
-    const selected = document.querySelector(`input[name="q${qi}"]:checked`);
-    const selectedIdx = selected ? parseInt(selected.value) : -1;
-    const labels = document.querySelectorAll(`.quiz-option[data-qi="${qi}"]`);
+  const qi = parseInt(opt.dataset.qi);
+  const oi = parseInt(opt.dataset.oi);
+  const q = state.quizData[qi];
+  const card = quizQuestions.querySelector(`.quiz-question[data-qi="${qi}"]`);
+  const labels = card.querySelectorAll('.quiz-option');
 
-    labels.forEach(lbl => {
-      const oi = parseInt(lbl.dataset.oi);
-      lbl.classList.add('disabled');
-      if (oi === q.correct) lbl.classList.add('correct');
-      if (oi === selectedIdx && oi !== q.correct) lbl.classList.add('incorrect');
-    });
+  // Lock all options in this question
+  labels.forEach(lbl => lbl.classList.add('disabled'));
 
-    if (selectedIdx === q.correct) correct++;
+  // Mark correct and selected
+  labels[q.correct].classList.add('correct');
+  if (oi !== q.correct) opt.classList.add('incorrect');
 
-    const expl = document.querySelectorAll('.quiz-question')[qi].querySelector('.quiz-explanation');
-    expl.classList.remove('hidden');
-  });
+  // Show explanation
+  card.querySelector('.quiz-explanation').classList.remove('hidden');
 
-  const total = state.quizData.length;
-  const pct = Math.round((correct / total) * 100);
+  // Update score
+  quizAnswered++;
+  if (oi === q.correct) quizCorrect++;
+  updateScoreBar();
+
+  // Show retake + regen when all answered
+  if (quizAnswered === state.quizData.length) {
+    retakeQuizBtn.classList.remove('hidden');
+  }
+}
+
+function updateScoreBar() {
+  const total = state.quizData ? state.quizData.length : 0;
+  if (quizAnswered === 0) {
+    quizScore.innerHTML = `<span style="color:var(--text-muted)">0 / ${total}</span>`;
+    return;
+  }
+  const pct = Math.round((quizCorrect / quizAnswered) * 100);
   const cls = pct >= 80 ? 'score-good' : pct >= 50 ? 'score-ok' : 'score-bad';
-  quizScore.innerHTML = `<span class="${cls}">${correct}/${total}</span> &mdash; ${pct}%`;
-  quizScore.classList.remove('hidden');
-  checkQuizBtn.classList.add('hidden');
-  retakeQuizBtn.classList.remove('hidden');
-  quizContainer.scrollTop = 0;
+  quizScore.innerHTML = `<span class="${cls}">${quizCorrect} / ${total}</span> &mdash; ${pct}% (${quizAnswered} answered)`;
 }
 
 function retakeQuiz() {
-  state.quizChecked = false;
   renderQuiz();
 }
 

@@ -252,27 +252,44 @@ async def ws_generate(ws: WebSocket):
 
 # ---- Quiz generation ----
 
-QUIZ_PROMPT = """You are generating a problem-solving quiz from educational material.
+QUIZ_PROMPT = """You are an expert educator creating a high-quality assessment from \
+educational material. Your goal is to produce questions that genuinely deepen \
+understanding — the kind a student would learn from even by getting wrong.
 
-Create exactly 10 multiple-choice questions. Every question MUST present a concrete \
-scenario, situation, or problem that requires reasoning — not just recall. Frame them \
-as "Given X, what happens?", "A system does Y — what is the result?", "An engineer \
-encounters Z — what should they do?", etc.
+Create exactly 30 multiple-choice questions across three tiers:
+- Questions 1-10: FOUNDATIONAL — test whether core concepts are understood correctly. \
+Use scenarios that expose common misconceptions. Example: "A process calls fork(). \
+Which of the following is true about the child process?"
+- Questions 11-20: APPLIED — require combining two or more concepts to reason through \
+a realistic scenario. Example: "A program maps a shared page, then one process writes \
+to it. Under copy-on-write, what happens to physical memory?"
+- Questions 21-30: ANALYTICAL — require deeper reasoning, tradeoff analysis, or \
+predicting system behavior under unusual conditions. Example: "A scheduler uses \
+round-robin with a 10ms quantum. Given these three CPU-bound jobs arriving at t=0, \
+what is the average turnaround time?"
+
+Question quality rules:
+- Every wrong option must be a plausible misconception, not an obvious throwaway. A \
+student who picks a wrong answer should have a specific misunderstanding you can address.
+- The explanation must teach — state WHY the right answer is right AND what \
+misconception each wrong answer represents if chosen.
+- Never ask "which of these is a definition of X" — always require applying the concept.
 
 CRITICAL formatting rules for answer options:
-- All 4 options must be the same length and style — a reader should NOT be able to \
-guess the correct answer just by noticing one option is longer, more detailed, or \
-more carefully worded than the others.
-- If one option uses a technical explanation, ALL options must use technical explanations.
-- If one option is short, ALL options must be short.
+- All 4 options must be the same length and style — a reader must NOT be able to \
+identify the correct answer by noticing one option is longer, more specific, or \
+more carefully qualified than the others.
+- If one option is a short phrase, ALL must be short phrases.
+- If one option is a full sentence with technical detail, ALL must match that style.
 - Avoid "all of the above" or "none of the above".
-- Randomize which position (0-3) is correct across questions — do not favor any slot.
+- Randomize which position (0-3) is correct — distribute roughly evenly.
 
 Return ONLY a JSON array (no markdown, no code fences) where each element has:
-- "question": a scenario-based problem
-- "options": array of exactly 4 answers, all visually uniform in length and style
+- "question": the scenario or problem
+- "options": array of exactly 4 answers, all visually uniform
 - "correct": zero-based index of the correct option (0-3)
-- "explanation": brief explanation (1-2 sentences)
+- "explanation": 2-3 sentences — why correct, and what misconception the best \
+distractor targets
 
 Text:
 """
