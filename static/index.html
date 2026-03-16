@@ -20,12 +20,8 @@ body { display: flex; flex-direction: column; }
 button { cursor: pointer; font-family: inherit; }
 
 /* ---- Setup View ---- */
-#setup-view {
-  flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem;
-}
-.setup-card {
-  width: 100%; max-width: 580px; display: flex; flex-direction: column; gap: 1.25rem;
-}
+#setup-view { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+.setup-card { width: 100%; max-width: 580px; display: flex; flex-direction: column; gap: 1.25rem; }
 .setup-card h1 { font-size: 1.6rem; font-weight: 600; text-align: center; }
 .setup-card .subtitle { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: -0.75rem; }
 
@@ -35,9 +31,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 2.5rem 1.5rem; text-align: center; transition: all 0.2s;
   cursor: pointer; position: relative;
 }
-#drop-zone:hover, #drop-zone.drag-over {
-  border-color: var(--primary); background: var(--highlight-bg);
-}
+#drop-zone:hover, #drop-zone.drag-over { border-color: var(--primary); background: var(--highlight-bg); }
 #drop-zone svg { width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 0.5rem; }
 #drop-zone p { color: var(--text-muted); font-size: 0.9rem; }
 #file-input { display: none; }
@@ -45,16 +39,11 @@ button { cursor: pointer; font-family: inherit; }
   margin-top: 0.75rem; display: inline-flex; align-items: center; gap: 0.5rem;
   background: var(--surface-2); padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.85rem;
 }
-#file-info button {
-  background: none; border: none; color: var(--text-muted); font-size: 1rem;
-  padding: 0 0.25rem; line-height: 1;
-}
+#file-info button { background: none; border: none; color: var(--text-muted); font-size: 1rem; padding: 0 0.25rem; line-height: 1; }
 #file-info button:hover { color: var(--danger); }
 
 /* Divider */
-.divider {
-  display: flex; align-items: center; gap: 1rem; color: var(--text-muted); font-size: 0.8rem;
-}
+.divider { display: flex; align-items: center; gap: 1rem; color: var(--text-muted); font-size: 0.8rem; }
 .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
 /* Text area */
@@ -91,28 +80,20 @@ button { cursor: pointer; font-family: inherit; }
 .speed-display { font-size: 0.75rem; color: var(--text-muted); text-align: right; }
 
 /* Generate button */
-#generate-btn {
+.btn-primary {
   width: 100%; padding: 0.7rem; border: none; border-radius: var(--radius);
   background: var(--primary); color: white; font-size: 0.95rem; font-weight: 500;
   transition: background 0.2s;
 }
-#generate-btn:hover:not(:disabled) { background: var(--primary-hover); }
-#generate-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ---- Progress View ---- */
-#progress-view {
-  flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem;
-}
+#progress-view { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
 .progress-card { width: 100%; max-width: 480px; text-align: center; }
 .progress-card h2 { font-size: 1.2rem; font-weight: 500; margin-bottom: 1.5rem; }
-#progress-bar-outer {
-  width: 100%; height: 6px; background: var(--surface-2); border-radius: 3px;
-  overflow: hidden; margin-bottom: 1rem;
-}
-#progress-bar-inner {
-  height: 100%; background: var(--primary); border-radius: 3px;
-  width: 0%; transition: width 0.3s;
-}
+#progress-bar-outer { width: 100%; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 1rem; }
+#progress-bar-inner { height: 100%; background: var(--primary); border-radius: 3px; width: 0%; transition: width 0.3s; }
 #progress-message { color: var(--text-muted); font-size: 0.85rem; min-height: 1.4em; }
 
 /* ---- Reader View ---- */
@@ -126,10 +107,7 @@ button { cursor: pointer; font-family: inherit; }
   padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.8rem;
 }
 #new-btn:hover { border-color: var(--primary); }
-.view-toggle-group {
-  display: flex; background: var(--surface-2); border-radius: 6px; overflow: hidden;
-  border: 1px solid var(--border);
-}
+.view-toggle-group { display: flex; background: var(--surface-2); border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
 .view-toggle-group button {
   background: none; border: none; color: var(--text-muted); padding: 0.3rem 0.75rem;
   font-size: 0.8rem; transition: all 0.15s;
@@ -137,20 +115,59 @@ button { cursor: pointer; font-family: inherit; }
 .view-toggle-group button.active { background: var(--primary); color: white; }
 
 #reader-content { flex: 1; overflow: hidden; position: relative; }
-#text-container {
-  height: 100%; overflow-y: auto; padding: 1.5rem 2rem; padding-bottom: 100px;
-}
+#text-container { height: 100%; overflow-y: auto; padding: 1.5rem 2rem; padding-bottom: 100px; }
 .paragraph {
   padding: 0.6rem 0.8rem; margin-bottom: 0.25rem; border-radius: var(--radius);
   border-left: 3px solid transparent; cursor: pointer; transition: all 0.15s;
   font-size: 0.95rem; line-height: 1.7; color: var(--text-muted);
 }
 .paragraph:hover { background: rgba(255,255,255,0.03); }
-.paragraph.active {
-  background: var(--highlight-bg); border-left-color: var(--highlight-border);
-  color: var(--text);
-}
+.paragraph.active { background: var(--highlight-bg); border-left-color: var(--highlight-border); color: var(--text); }
 #pdf-viewer { width: 100%; height: 100%; border: none; }
+
+/* ---- Quiz ---- */
+#quiz-container { height: 100%; overflow-y: auto; padding: 1.5rem 2rem; padding-bottom: 100px; }
+#quiz-empty { text-align: center; padding: 3rem 1rem; }
+#quiz-empty p { color: var(--text-muted); margin-bottom: 1rem; font-size: 0.95rem; }
+#quiz-loading { text-align: center; padding: 3rem; color: var(--text-muted); }
+@keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+#quiz-loading span { animation: pulse 1.5s ease-in-out infinite; }
+#quiz-error { text-align: center; padding: 2rem; color: var(--danger); font-size: 0.9rem; }
+#quiz-error button { margin-top: 0.75rem; }
+.quiz-question {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1.25rem; margin-bottom: 1rem;
+}
+.quiz-q-num { font-size: 0.7rem; color: var(--primary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.3rem; }
+.quiz-q-text { font-size: 0.95rem; margin-bottom: 0.75rem; line-height: 1.5; }
+.quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+.quiz-option {
+  display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer;
+  font-size: 0.9rem; transition: all 0.15s; line-height: 1.4;
+}
+.quiz-option:hover { border-color: var(--text-muted); }
+.quiz-option.correct { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+.quiz-option.incorrect { border-color: #ef4444; background: rgba(239,68,68,0.08); }
+.quiz-option.disabled { pointer-events: none; opacity: 0.7; }
+.quiz-option input[type="radio"] { margin-top: 0.2rem; accent-color: var(--primary); flex-shrink: 0; }
+.quiz-explanation {
+  margin-top: 0.75rem; padding: 0.75rem; background: rgba(99,102,241,0.06);
+  border-left: 3px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;
+}
+#quiz-score {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem; margin-bottom: 1rem; text-align: center; font-size: 1.1rem;
+}
+.score-good { color: #22c55e; } .score-ok { color: #f59e0b; } .score-bad { color: #ef4444; }
+.quiz-btn {
+  width: 100%; padding: 0.65rem; border: none; border-radius: var(--radius);
+  background: var(--primary); color: white; font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; transition: background 0.2s; margin-top: 0.25rem;
+}
+.quiz-btn:hover { background: var(--primary-hover); }
+.quiz-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ---- Player Bar ---- */
 #player {
@@ -166,37 +183,27 @@ button { cursor: pointer; font-family: inherit; }
 .player-controls button:hover { background: var(--surface-2); }
 #play-pause-btn { font-size: 1rem; width: 36px; height: 36px; background: var(--primary); color: white; }
 #play-pause-btn:hover { background: var(--primary-hover); }
-
 .player-scrub { flex: 1; display: flex; align-items: center; gap: 0.6rem; }
 .player-scrub .time { font-size: 0.75rem; color: var(--text-muted); min-width: 42px; font-variant-numeric: tabular-nums; }
 .player-scrub .time:last-child { text-align: right; }
 #scrubber { flex: 1; }
-
 .player-extras { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; }
 #playback-speed {
   background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
   padding: 0.2rem 0.3rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;
 }
 #volume { width: 80px; }
-#download-btn {
-  background: none; border: none; color: var(--text-muted); font-size: 0.85rem;
-  padding: 0.25rem; cursor: pointer;
-}
+#download-btn { background: none; border: none; color: var(--text-muted); font-size: 0.85rem; padding: 0.25rem; cursor: pointer; }
 #download-btn:hover { color: var(--text); }
 
 /* Range inputs */
 input[type="range"] { -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
-input[type="range"]::-webkit-slider-runnable-track {
-  height: 4px; background: var(--surface-2); border-radius: 2px;
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 12px; height: 12px; background: var(--primary);
-  border-radius: 50%; margin-top: -4px;
-}
+input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: var(--surface-2); border-radius: 2px; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--primary); border-radius: 50%; margin-top: -4px; }
 input[type="range"]::-moz-range-track { height: 4px; background: var(--surface-2); border-radius: 2px; border: none; }
 input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: var(--primary); border-radius: 50%; border: none; }
 
-/* ---- Scrollbar ---- */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -245,7 +252,7 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: v
       </div>
     </details>
 
-    <button id="generate-btn" disabled>Generate Audiobook</button>
+    <button id="generate-btn" class="btn-primary" disabled>Generate Audiobook</button>
   </div>
 </div>
 
@@ -262,14 +269,29 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: v
 <div id="reader-view" class="hidden">
   <div id="reader-toolbar">
     <button id="new-btn">&larr; New</button>
-    <div id="view-toggle" class="view-toggle-group hidden">
-      <button id="btn-text-view" class="active">Clean Text</button>
-      <button id="btn-pdf-view">Original PDF</button>
+    <div id="view-toggle" class="view-toggle-group">
+      <button id="btn-text-view" class="active">Text</button>
+      <button id="btn-pdf-view" class="hidden">PDF</button>
+      <button id="btn-quiz-view">Quiz</button>
     </div>
   </div>
   <div id="reader-content">
     <div id="text-container"></div>
     <iframe id="pdf-viewer" class="hidden"></iframe>
+    <div id="quiz-container" class="hidden">
+      <div id="quiz-empty">
+        <p>Test your understanding of the material</p>
+        <button class="quiz-btn" id="gen-quiz-btn">Generate Quiz</button>
+      </div>
+      <div id="quiz-loading" class="hidden"><span>Generating quiz questions...</span></div>
+      <div id="quiz-error" class="hidden"></div>
+      <div id="quiz-content" class="hidden">
+        <div id="quiz-score" class="hidden"></div>
+        <div id="quiz-questions"></div>
+        <button class="quiz-btn" id="check-quiz-btn">Check Answers</button>
+        <button class="quiz-btn hidden" id="retake-quiz-btn">Retake Quiz</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -304,59 +326,41 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: v
    State
    ================================================================ */
 const state = {
-  pdfId: null,
-  pdfFilename: null,
-  audioUrl: null,
-  timecodes: [],
-  activeIdx: -1,
+  pdfId: null, pdfFilename: null,
+  audioUrl: null, timecodes: [], activeIdx: -1,
+  cleanText: null, quizData: null, quizChecked: false,
 };
 
 /* ================================================================
    DOM refs
    ================================================================ */
-const $ = (s) => document.querySelector(s);
-const setupView    = $('#setup-view');
-const progressView = $('#progress-view');
-const readerView   = $('#reader-view');
-const playerBar    = $('#player');
-const audio        = $('#audio');
+const $ = s => document.querySelector(s);
+const setupView = $('#setup-view'), progressView = $('#progress-view'),
+      readerView = $('#reader-view'), playerBar = $('#player'), audio = $('#audio');
 
-// setup
-const dropZone    = $('#drop-zone');
-const fileInput   = $('#file-input');
-const fileInfo    = $('#file-info');
-const fileName    = $('#file-name');
-const fileClear   = $('#file-clear');
-const textInput   = $('#text-input');
-const voiceSelect = $('#voice-select');
-const speedSlider = $('#speed-slider');
-const speedDisp   = $('#speed-display');
-const keepHead    = $('#keep-headings');
-const keepCode    = $('#keep-code');
-const genBtn      = $('#generate-btn');
+const dropZone = $('#drop-zone'), fileInput = $('#file-input'), fileInfo = $('#file-info'),
+      fileName = $('#file-name'), fileClear = $('#file-clear'), textInput = $('#text-input'),
+      voiceSelect = $('#voice-select'), speedSlider = $('#speed-slider'),
+      speedDisp = $('#speed-display'), keepHead = $('#keep-headings'),
+      keepCode = $('#keep-code'), genBtn = $('#generate-btn');
 
-// progress
-const progBar     = $('#progress-bar-inner');
-const progMsg     = $('#progress-message');
+const progBar = $('#progress-bar-inner'), progMsg = $('#progress-message');
 
-// reader
-const newBtn      = $('#new-btn');
-const viewToggle  = $('#view-toggle');
-const btnTextView = $('#btn-text-view');
-const btnPdfView  = $('#btn-pdf-view');
-const textCont    = $('#text-container');
-const pdfViewer   = $('#pdf-viewer');
+const newBtn = $('#new-btn'), btnTextView = $('#btn-text-view'),
+      btnPdfView = $('#btn-pdf-view'), btnQuizView = $('#btn-quiz-view'),
+      textCont = $('#text-container'), pdfViewer = $('#pdf-viewer');
 
-// player
-const playPause   = $('#play-pause-btn');
-const skipBack    = $('#skip-back-btn');
-const skipFwd     = $('#skip-fwd-btn');
-const scrubber    = $('#scrubber');
-const curTime     = $('#cur-time');
-const totTime     = $('#tot-time');
-const pbSpeed     = $('#playback-speed');
-const volumeCtrl  = $('#volume');
-const downloadBtn = $('#download-btn');
+const quizContainer = $('#quiz-container'), quizEmpty = $('#quiz-empty'),
+      quizLoading = $('#quiz-loading'), quizError = $('#quiz-error'),
+      quizContent = $('#quiz-content'), quizQuestions = $('#quiz-questions'),
+      quizScore = $('#quiz-score'), genQuizBtn = $('#gen-quiz-btn'),
+      checkQuizBtn = $('#check-quiz-btn'), retakeQuizBtn = $('#retake-quiz-btn');
+
+const playPause = $('#play-pause-btn'), skipBack = $('#skip-back-btn'),
+      skipFwd = $('#skip-fwd-btn'), scrubber = $('#scrubber'),
+      curTime = $('#cur-time'), totTime = $('#tot-time'),
+      pbSpeed = $('#playback-speed'), volumeCtrl = $('#volume'),
+      downloadBtn = $('#download-btn');
 
 /* ================================================================
    View switching
@@ -367,6 +371,19 @@ function showView(name) {
   readerView.classList.toggle('hidden', name !== 'reader');
   playerBar.classList.toggle('hidden', name !== 'reader');
 }
+
+function switchReaderTab(tab) {
+  btnTextView.classList.toggle('active', tab === 'text');
+  btnPdfView.classList.toggle('active', tab === 'pdf');
+  btnQuizView.classList.toggle('active', tab === 'quiz');
+  textCont.classList.toggle('hidden', tab !== 'text');
+  pdfViewer.classList.toggle('hidden', tab !== 'pdf');
+  quizContainer.classList.toggle('hidden', tab !== 'quiz');
+}
+
+btnTextView.addEventListener('click', () => switchReaderTab('text'));
+btnPdfView.addEventListener('click', () => switchReaderTab('pdf'));
+btnQuizView.addEventListener('click', () => switchReaderTab('quiz'));
 
 /* ================================================================
    Init: load voices
@@ -382,52 +399,36 @@ fetch('/voices').then(r => r.json()).then(voices => {
 }).catch(() => {});
 
 /* ================================================================
-   Input handling — enable Generate when content available
+   Input handling
    ================================================================ */
-function updateGenBtn() {
-  genBtn.disabled = !(state.pdfId || textInput.value.trim());
-}
+function updateGenBtn() { genBtn.disabled = !(state.pdfId || textInput.value.trim()); }
 textInput.addEventListener('input', updateGenBtn);
 
-// Drop zone
 dropZone.addEventListener('click', () => fileInput.click());
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
 dropZone.addEventListener('drop', e => {
   e.preventDefault(); dropZone.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type === 'application/pdf') uploadFile(file);
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') uploadFile(f);
 });
-fileInput.addEventListener('change', () => {
-  if (fileInput.files[0]) uploadFile(fileInput.files[0]);
-});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) uploadFile(fileInput.files[0]); });
 fileClear.addEventListener('click', e => {
-  e.stopPropagation();
-  state.pdfId = null; state.pdfFilename = null;
-  fileInfo.classList.add('hidden'); fileInput.value = '';
-  updateGenBtn();
+  e.stopPropagation(); state.pdfId = null; state.pdfFilename = null;
+  fileInfo.classList.add('hidden'); fileInput.value = ''; updateGenBtn();
 });
 
 async function uploadFile(file) {
-  const fd = new FormData();
-  fd.append('file', file);
+  const fd = new FormData(); fd.append('file', file);
   try {
     const res = await fetch('/upload', { method: 'POST', body: fd });
     const data = await res.json();
-    state.pdfId = data.id;
-    state.pdfFilename = data.filename;
-    fileName.textContent = data.filename;
-    fileInfo.classList.remove('hidden');
-    updateGenBtn();
-  } catch (err) {
-    alert('Upload failed: ' + err.message);
-  }
+    state.pdfId = data.id; state.pdfFilename = data.filename;
+    fileName.textContent = data.filename; fileInfo.classList.remove('hidden'); updateGenBtn();
+  } catch (err) { alert('Upload failed: ' + err.message); }
 }
 
-// Speed slider label
-speedSlider.addEventListener('input', () => {
-  speedDisp.textContent = parseFloat(speedSlider.value).toFixed(1) + 'x';
-});
+speedSlider.addEventListener('input', () => { speedDisp.textContent = parseFloat(speedSlider.value).toFixed(1) + 'x'; });
 
 /* ================================================================
    Generation via WebSocket
@@ -435,89 +436,62 @@ speedSlider.addEventListener('input', () => {
 genBtn.addEventListener('click', startGeneration);
 
 function startGeneration() {
-  showView('progress');
-  progBar.style.width = '0%';
-  progMsg.textContent = 'Connecting...';
-
+  showView('progress'); progBar.style.width = '0%'; progMsg.textContent = 'Connecting...';
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const ws = new WebSocket(`${proto}//${location.host}/ws/generate`);
 
   ws.onopen = () => {
     const msg = { voice: voiceSelect.value, speed: parseFloat(speedSlider.value),
                   keep_headings: keepHead.checked, keep_code: keepCode.checked };
-    if (state.pdfId) {
-      msg.mode = 'pdf'; msg.pdf_id = state.pdfId;
-    } else {
-      msg.mode = 'text'; msg.text = textInput.value;
-    }
+    if (state.pdfId) { msg.mode = 'pdf'; msg.pdf_id = state.pdfId; }
+    else { msg.mode = 'text'; msg.text = textInput.value; }
     ws.send(JSON.stringify(msg));
   };
-
-  ws.onmessage = (e) => {
+  ws.onmessage = e => {
     const data = JSON.parse(e.data);
     if (data.type === 'status') {
       progMsg.textContent = data.message;
-      // Parse "Generating audio chunk 14/87..." for progress bar
       const m = data.message.match(/chunk (\d+)\/(\d+)/);
       if (m) progBar.style.width = ((parseInt(m[1]) / parseInt(m[2])) * 100) + '%';
-    } else if (data.type === 'done') {
-      ws.close();
-      onGenerationDone(data);
-    } else if (data.type === 'error') {
-      ws.close();
-      alert('Error: ' + data.message);
-      showView('setup');
-    }
+    } else if (data.type === 'done') { ws.close(); onGenerationDone(data); }
+    else if (data.type === 'error') { ws.close(); alert('Error: ' + data.message); showView('setup'); }
   };
-
   ws.onerror = () => { alert('WebSocket connection failed'); showView('setup'); };
 }
 
 /* ================================================================
-   Generation complete — set up reader & player
+   Generation complete
    ================================================================ */
 function onGenerationDone(data) {
   state.audioUrl = data.audio_url;
   state.timecodes = data.timecodes;
+  state.cleanText = data.clean_text;
   state.activeIdx = -1;
+  state.quizData = null;
+  state.quizChecked = false;
 
-  // Populate text container
   textCont.innerHTML = '';
   data.timecodes.forEach((tc, i) => {
     const div = document.createElement('div');
-    div.className = 'paragraph';
-    div.dataset.index = i;
-    div.textContent = tc.text;
+    div.className = 'paragraph'; div.dataset.index = i; div.textContent = tc.text;
     div.addEventListener('click', () => { audio.currentTime = tc.start; audio.play(); });
     textCont.appendChild(div);
   });
 
   // PDF toggle
-  if (data.pdf_id) {
-    viewToggle.classList.remove('hidden');
-    pdfViewer.src = `/uploads/${data.pdf_id}`;
-  } else {
-    viewToggle.classList.add('hidden');
-  }
+  if (data.pdf_id) { btnPdfView.classList.remove('hidden'); pdfViewer.src = `/uploads/${data.pdf_id}`; }
+  else { btnPdfView.classList.add('hidden'); }
 
-  // Audio
-  audio.src = data.audio_url;
-  audio.load();
+  // Reset quiz panel
+  quizEmpty.classList.remove('hidden');
+  quizLoading.classList.add('hidden');
+  quizError.classList.add('hidden');
+  quizContent.classList.add('hidden');
 
+  audio.src = data.audio_url; audio.load();
+  switchReaderTab('text');
   showView('reader');
 }
-
-/* ================================================================
-   View toggle (clean text / original PDF)
-   ================================================================ */
-btnTextView.addEventListener('click', () => {
-  btnTextView.classList.add('active'); btnPdfView.classList.remove('active');
-  textCont.classList.remove('hidden'); pdfViewer.classList.add('hidden');
-});
-btnPdfView.addEventListener('click', () => {
-  btnPdfView.classList.add('active'); btnTextView.classList.remove('active');
-  pdfViewer.classList.remove('hidden'); textCont.classList.add('hidden');
-});
 
 /* ================================================================
    New button — reset
@@ -525,32 +499,24 @@ btnPdfView.addEventListener('click', () => {
 newBtn.addEventListener('click', () => {
   audio.pause(); audio.src = '';
   state.audioUrl = null; state.timecodes = []; state.activeIdx = -1;
-  textCont.innerHTML = '';
+  state.cleanText = null; state.quizData = null; state.quizChecked = false;
+  textCont.innerHTML = ''; quizQuestions.innerHTML = '';
   showView('setup');
 });
 
 /* ================================================================
-   Audio player controls
+   Audio player
    ================================================================ */
-playPause.addEventListener('click', () => {
-  if (audio.paused) audio.play(); else audio.pause();
-});
+playPause.addEventListener('click', () => { if (audio.paused) audio.play(); else audio.pause(); });
 audio.addEventListener('play',  () => { playPause.innerHTML = '&#9646;&#9646;'; });
 audio.addEventListener('pause', () => { playPause.innerHTML = '&#9654;'; });
 
 skipBack.addEventListener('click', () => { audio.currentTime = Math.max(0, audio.currentTime - 15); });
 skipFwd.addEventListener('click',  () => { audio.currentTime = Math.min(audio.duration, audio.currentTime + 15); });
 
-// Scrubber
 let scrubbing = false;
-scrubber.addEventListener('input', () => {
-  scrubbing = true;
-  curTime.textContent = fmt((scrubber.value / 1000) * audio.duration);
-});
-scrubber.addEventListener('change', () => {
-  audio.currentTime = (scrubber.value / 1000) * audio.duration;
-  scrubbing = false;
-});
+scrubber.addEventListener('input', () => { scrubbing = true; curTime.textContent = fmt((scrubber.value / 1000) * audio.duration); });
+scrubber.addEventListener('change', () => { audio.currentTime = (scrubber.value / 1000) * audio.duration; scrubbing = false; });
 
 audio.addEventListener('loadedmetadata', () => { totTime.textContent = fmt(audio.duration); });
 audio.addEventListener('timeupdate', () => {
@@ -561,54 +527,137 @@ audio.addEventListener('timeupdate', () => {
   updateActiveParagraph();
 });
 
-// Playback speed
 pbSpeed.addEventListener('change', () => { audio.playbackRate = parseFloat(pbSpeed.value); });
-
-// Volume
 volumeCtrl.addEventListener('input', () => { audio.volume = volumeCtrl.value / 100; });
-
-// Download
 downloadBtn.addEventListener('click', () => {
   if (!state.audioUrl) return;
-  const a = document.createElement('a');
-  a.href = state.audioUrl; a.download = 'audiobook.mp3';
+  const a = document.createElement('a'); a.href = state.audioUrl; a.download = 'audiobook.mp3';
   document.body.appendChild(a); a.click(); a.remove();
 });
 
 /* ================================================================
-   Timecode sync — highlight active paragraph
+   Timecode sync
    ================================================================ */
 function updateActiveParagraph() {
-  const t = audio.currentTime;
-  let idx = -1;
+  const t = audio.currentTime; let idx = -1;
   for (let i = 0; i < state.timecodes.length; i++) {
     if (t >= state.timecodes[i].start && t < state.timecodes[i].end) { idx = i; break; }
   }
-  // If between paragraphs (in silence gap), keep the last one active
-  if (idx === -1) {
-    for (let i = state.timecodes.length - 1; i >= 0; i--) {
-      if (t >= state.timecodes[i].start) { idx = i; break; }
-    }
-  }
-
+  if (idx === -1) { for (let i = state.timecodes.length - 1; i >= 0; i--) { if (t >= state.timecodes[i].start) { idx = i; break; } } }
   if (idx !== state.activeIdx) {
     const paras = textCont.querySelectorAll('.paragraph');
     if (state.activeIdx >= 0 && paras[state.activeIdx]) paras[state.activeIdx].classList.remove('active');
-    if (idx >= 0 && paras[idx]) {
-      paras[idx].classList.add('active');
-      paras[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    if (idx >= 0 && paras[idx]) { paras[idx].classList.add('active'); paras[idx].scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     state.activeIdx = idx;
   }
 }
 
 /* ================================================================
+   Quiz
+   ================================================================ */
+genQuizBtn.addEventListener('click', generateQuiz);
+checkQuizBtn.addEventListener('click', checkQuiz);
+retakeQuizBtn.addEventListener('click', retakeQuiz);
+
+async function generateQuiz() {
+  quizEmpty.classList.add('hidden');
+  quizError.classList.add('hidden');
+  quizContent.classList.add('hidden');
+  quizLoading.classList.remove('hidden');
+
+  try {
+    const res = await fetch('/quiz/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: state.cleanText }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Quiz generation failed');
+    }
+    state.quizData = await res.json();
+    state.quizChecked = false;
+    renderQuiz();
+  } catch (err) {
+    quizLoading.classList.add('hidden');
+    quizError.innerHTML = `<p>${err.message}</p><button class="quiz-btn" onclick="generateQuiz()">Retry</button>`;
+    quizError.classList.remove('hidden');
+  }
+}
+
+function renderQuiz() {
+  quizLoading.classList.add('hidden');
+  quizQuestions.innerHTML = '';
+  quizScore.classList.add('hidden');
+  checkQuizBtn.classList.remove('hidden');
+  retakeQuizBtn.classList.add('hidden');
+
+  state.quizData.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'quiz-question';
+    card.innerHTML = `
+      <div class="quiz-q-num">Question ${qi + 1}</div>
+      <div class="quiz-q-text">${esc(q.question)}</div>
+      <div class="quiz-options">
+        ${q.options.map((opt, oi) => `
+          <label class="quiz-option" data-qi="${qi}" data-oi="${oi}">
+            <input type="radio" name="q${qi}" value="${oi}">
+            <span>${esc(opt)}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div class="quiz-explanation hidden">${esc(q.explanation)}</div>
+    `;
+    quizQuestions.appendChild(card);
+  });
+
+  quizContent.classList.remove('hidden');
+}
+
+function checkQuiz() {
+  if (!state.quizData) return;
+  state.quizChecked = true;
+  let correct = 0;
+
+  state.quizData.forEach((q, qi) => {
+    const selected = document.querySelector(`input[name="q${qi}"]:checked`);
+    const selectedIdx = selected ? parseInt(selected.value) : -1;
+    const labels = document.querySelectorAll(`.quiz-option[data-qi="${qi}"]`);
+
+    labels.forEach(lbl => {
+      const oi = parseInt(lbl.dataset.oi);
+      lbl.classList.add('disabled');
+      if (oi === q.correct) lbl.classList.add('correct');
+      if (oi === selectedIdx && oi !== q.correct) lbl.classList.add('incorrect');
+    });
+
+    if (selectedIdx === q.correct) correct++;
+
+    const expl = document.querySelectorAll('.quiz-question')[qi].querySelector('.quiz-explanation');
+    expl.classList.remove('hidden');
+  });
+
+  const total = state.quizData.length;
+  const pct = Math.round((correct / total) * 100);
+  const cls = pct >= 80 ? 'score-good' : pct >= 50 ? 'score-ok' : 'score-bad';
+  quizScore.innerHTML = `<span class="${cls}">${correct}/${total}</span> &mdash; ${pct}%`;
+  quizScore.classList.remove('hidden');
+  checkQuizBtn.classList.add('hidden');
+  retakeQuizBtn.classList.remove('hidden');
+  quizContainer.scrollTop = 0;
+}
+
+function retakeQuiz() {
+  state.quizChecked = false;
+  renderQuiz();
+}
+
+/* ================================================================
    Keyboard shortcuts
    ================================================================ */
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
   if (readerView.classList.contains('hidden')) return;
-
   if (e.code === 'Space') { e.preventDefault(); playPause.click(); }
   else if (e.code === 'ArrowLeft') { e.preventDefault(); skipBack.click(); }
   else if (e.code === 'ArrowRight') { e.preventDefault(); skipFwd.click(); }
@@ -621,6 +670,9 @@ function fmt(s) {
   if (!s || isNaN(s)) return '0:00';
   const m = Math.floor(s / 60), sec = Math.floor(s % 60);
   return m + ':' + String(sec).padStart(2, '0');
+}
+function esc(s) {
+  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
 }
 </script>
 </body>

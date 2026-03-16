@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 import uvicorn
+from pydantic import BaseModel
 from fastapi import FastAPI, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -247,6 +248,52 @@ async def ws_generate(ws: WebSocket):
             await ws.send_json({"type": "error", "message": str(e)})
         except Exception:
             pass
+
+
+# ---- Quiz generation ----
+
+QUIZ_PROMPT = """Based on the following educational text, create exactly 10 multiple-choice \
+questions that test understanding of the key concepts.
+
+Return ONLY a JSON array (no markdown, no code fences) where each element has:
+- "question": the question text
+- "options": array of exactly 4 answer choices
+- "correct": zero-based index of the correct option (0-3)
+- "explanation": brief explanation of why the answer is correct (1-2 sentences)
+
+Make questions progressively harder. Focus on core concepts, not trivia.
+
+Text:
+"""
+
+
+class QuizRequest(BaseModel):
+    text: str
+
+
+@app.post("/quiz/generate")
+async def generate_quiz(req: QuizRequest):
+    import json as _json
+    try:
+        import anthropic
+    except ImportError:
+        return JSONResponse(
+            {"error": "Run: pip install anthropic"}, status_code=500,
+        )
+    try:
+        client = anthropic.AsyncAnthropic()
+        resp = await client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            messages=[{"role": "user", "content": QUIZ_PROMPT + req.text}],
+        )
+        raw = resp.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
+        return _json.loads(raw)
+    except Exception as e:
+        name = type(e).__name__
+        return JSONResponse({"error": f"{name}: {e}"}, status_code=500)
 
 
 if __name__ == "__main__":
