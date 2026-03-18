@@ -1,4 +1,4 @@
-"""FastAPI web interface for the PDF-to-audiobook pipeline."""
+"""FastAPI web interface for the document-to-audiobook pipeline."""
 
 import asyncio
 import queue as thread_queue
