@@ -25,15 +25,48 @@ SUPPORTED_EXTENSIONS = {".pdf", ".epub", ".docx", ".html", ".htm", ".txt", ".md"
 # ---------------------------------------------------------------------------
 
 def extract_text(pdf_path: str) -> str:
-    """Extract text from a PDF, handling multi-column layouts via block sorting."""
+    """Extract text from a PDF.
+
+    Handles multi-column layouts via block sorting and automatically strips
+    repeated headers/footers by detecting text that appears in the margin
+    zones (top/bottom 12%) of many pages.
+    """
     import fitz  # PyMuPDF
+    from collections import Counter
 
     doc = fitz.open(pdf_path)
-    pages = []
+
+    # First pass — collect blocks with position metadata.
+    page_blocks: list[list[dict]] = []
     for page in doc:
+        height = page.rect.height
         blocks = page.get_text("blocks", sort=True)
-        texts = [b[4].strip() for b in blocks if b[6] == 0 and b[4].strip()]
+        page_blocks.append([
+            {"text": b[4].strip(), "y0": b[1], "y1": b[3], "height": height}
+            for b in blocks if b[6] == 0 and b[4].strip()
+        ])
+
+    # Second pass — detect repeated margin text (headers / footers).
+    repeated: set[str] = set()
+    if len(page_blocks) >= 4:
+        margin_counts: Counter[str] = Counter()
+        for blocks in page_blocks:
+            seen: set[str] = set()
+            for b in blocks:
+                if b["y0"] / b["height"] < 0.12 or b["y1"] / b["height"] > 0.88:
+                    t = b["text"]
+                    if t not in seen:
+                        margin_counts[t] += 1
+                        seen.add(t)
+        threshold = len(page_blocks) * 0.4
+        repeated = {t for t, c in margin_counts.items() if c >= threshold}
+
+    # Third pass — build final text, excluding repeated headers/footers.
+    pages: list[str] = []
+    for blocks in page_blocks:
+        texts = [b["text"] for b in blocks if b["text"] not in repeated]
         pages.append("\n\n".join(texts))
+
     doc.close()
     return "\n\n".join(pages)
 
@@ -131,7 +164,10 @@ def extract_text_from_file(file_path: str) -> str:
 # ---------------------------------------------------------------------------
 
 def _is_code_line(line: str) -> bool:
-    """Heuristically decide whether a line looks like source code or shell output."""
+    """Heuristically decide whether a line looks like source code or shell output.
+
+    Covers C/C++, Python, Java, JavaScript, shell, Go, Rust, and assembly.
+    """
     s = line.strip()
     if not s:
         return False
@@ -140,33 +176,42 @@ def _is_code_line(line: str) -> bool:
     if re.match(r"^\d{1,3}\s{2,}\S", s):
         return True
     # Shell / REPL prompts
-    if re.match(r"^[\$%>]\s", s) or re.match(r"^prompt>", s, re.IGNORECASE):
+    if re.match(r"^[\$%>]{1,3}\s", s) or re.match(r"^(prompt|>>>|\.\.\.)\s*", s, re.IGNORECASE):
         return True
-    # C preprocessor
-    if re.match(r"^#\s*(include|define|ifdef|ifndef|endif|pragma)\b", s):
+    # C / C++ preprocessor
+    if re.match(r"^#\s*(include|define|ifdef|ifndef|endif|pragma|import)\b", s):
         return True
-    # C declarations / keywords at start of line
+    # C / C++ / Java / Go type declarations at start of line
     if re.match(
-        r"^(int|void|char|float|double|unsigned|long|short|"
-        r"struct|enum|typedef|static|extern|const)\s+\w", s
+        r"^(int|void|char|float|double|unsigned|long|short|bool|auto|"
+        r"struct|enum|typedef|static|extern|const|class|public|private|"
+        r"protected|return|package|import|func|fn|let|mut|pub|use)\s+\w", s
     ):
+        return True
+    # Python-style def / class / import / from-import
+    if re.match(r"^(def|class|import|from)\s+\w", s):
         return True
     # Lines ending with ; { } that are short (likely code, not prose)
     if re.search(r"[;{}]\s*$", s) and len(s) < 120:
         if not re.match(r"^[A-Z][a-z]", s):  # skip normal sentences
             return True
-    # Common C library / system calls
+    # Function call at start of line (common across C, Python, JS, etc.)
     if re.match(
         r"^(printf|fprintf|sprintf|assert|exit|malloc|calloc|free|"
         r"fork|exec\w*|wait\w*|open|close|read|write|ioctl|mmap|"
-        r"pthread_\w+|Pthread_\w+|fopen|fclose|fread|fwrite)\s*\(", s
+        r"pthread_\w+|Pthread_\w+|fopen|fclose|fread|fwrite|"
+        r"print|console\.log|fmt\.Print|System\.out)\s*\(", s
     ):
         return True
-    # x86 assembly mnemonics
+    # x86 / ARM assembly mnemonics
     if re.match(
         r"^(mov|push|pop|call|ret|jmp|je|jne|jz|jnz|add|sub|"
-        r"cmp|xor|lea|test|nop|int)\s", s, re.IGNORECASE
+        r"cmp|xor|lea|test|nop|int|ldr|str|bl|bx)\s", s, re.IGNORECASE
     ):
+        return True
+    # Lines that are mostly non-alphabetic (operators, brackets, etc.)
+    alpha_ratio = sum(c.isalpha() for c in s) / max(len(s), 1)
+    if len(s) > 4 and alpha_ratio < 0.3:
         return True
     return False
 
@@ -204,37 +249,47 @@ def _remove_code_blocks(text: str) -> str:
 def sanitize_text(
     text: str, keep_headings: bool = True, keep_code: bool = False
 ) -> str:
-    """Clean raw PDF text so it sounds natural when spoken."""
+    """Clean extracted document text so it sounds natural when spoken.
 
-    # Fix hyphenated line breaks (e.g. "com-\nputer" -> "computer")
+    Works across PDFs, ebooks, web pages, and other formats — no
+    assumptions about any specific document or publisher.
+    """
+
+    # Fix hyphenated line breaks (e.g. "com-\nputer" → "computer")
     text = re.sub(r"(\w)-\n(\w)", r"\1\2", text)
 
-    # ---- Headers / footers / page furniture ----
-    for pat in [
-        r"(?m)^.*THREE EASY PIECES.*$",
-        r"(?m)^.*WWW\.OSTEP\.ORG.*$",
-        r"(?m)^.*OSTEP\.ORG.*$",
-        r"(?m)^\s*\u00a9.*$",          # © lines
-        r"(?m)^\s*©.*$",
-    ]:
-        text = re.sub(pat, "", text, flags=re.IGNORECASE)
-    # Case-sensitive: catch all-caps page headers like "INTRODUCTION TO OPERATING SYSTEMS"
-    text = re.sub(r"(?m)^\d{0,4}\s*[A-Z\s]{2,}OPERATING SYSTEMS.*$", "", text)
-
+    # ---- Page furniture ----
+    # Copyright lines
+    text = re.sub(r"(?m)^\s*[\u00a9©].*$", "", text)
     # Standalone page numbers
     text = re.sub(r"(?m)^\s*\d{1,4}\s*$", "", text)
+    # "Page X of Y" patterns
+    text = re.sub(r"(?m)^.*Page\s+\d+\s+of\s+\d+.*$", "", text, flags=re.IGNORECASE)
+    # All-caps lines that are short (usually running headers)
+    text = re.sub(r"(?m)^[A-Z\s\d\-:,]{8,80}$", _drop_if_allcaps, text)
 
-    # Figure / table captions
+    # ---- Figure / table / exhibit captions ----
     text = re.sub(
-        r"(?m)^(?:Figure|Table)\s+\d+[\.\:].+$", "", text, flags=re.IGNORECASE
+        r"(?m)^(?:Figure|Fig\.|Table|Chart|Diagram|Exhibit)\s+\d+[\.\:\-].+$",
+        "", text, flags=re.IGNORECASE,
     )
+
+    # ---- URLs and email addresses ----
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"www\.\S+", "", text)
+    text = re.sub(r"\S+@\S+\.\S+", "", text)
+
+    # ---- Table of contents lines ----
+    # "Some Title ........... 42" or "Some Title          42"
+    text = re.sub(r"(?m)^.{3,60}\.{4,}\s*\d+\s*$", "", text)
+    text = re.sub(r"(?m)^.{3,60}\s{4,}\d{1,4}\s*$", "", text)
 
     # ---- Code blocks ----
     if not keep_code:
         text = _remove_code_blocks(text)
 
     # ---- Citations & footnotes ----
-    # Academic tags: [PP03], [BOH+10], [K+61,L78], …
+    # Academic citation tags: [PP03], [BOH+10], [K+61,L78]
     text = re.sub(
         r"\[(?:[A-Z][A-Za-z+]*\d{2,4}"
         r"(?:\s*,\s*[A-Z][A-Za-z+]*\d{2,4})*)\]",
@@ -242,53 +297,85 @@ def sanitize_text(
     )
     # Bracketed footnote numbers: [1], [12]
     text = re.sub(r"\[\d{1,3}\]", "", text)
+    # Superscript-style footnote markers ("1Of course" → "Of course")
+    text = re.sub(r"(?m)^\d{1,2}(?=[A-Z][a-z])", "", text)
 
-    # ---- Back-matter sections (References, Homework) ----
-    text = re.sub(
-        r"(?s)\n\s*References\s*\n.+$", "", text, flags=re.IGNORECASE
-    )
-    text = re.sub(
-        r"(?s)\n\s*Homework\s*(?:\(.*?\))?\s*\n.+$", "", text, flags=re.IGNORECASE
-    )
-
-    # ---- ASIDE / CRUX boxes — keep prose, drop label ----
-    text = re.sub(
-        r"(?m)^(?:ASIDE|TIP|THE CRUX OF THE PROBLEM|CRUX OF THE PROBLEM)"
-        r"[:\s]*\n?",
-        "", text,
-    )
+    # ---- Back-matter sections (cut from heading to end of text) ----
+    for heading in [
+        r"References", r"Bibliography", r"Works\s+Cited",
+        r"Homework(?:\s*\(.*?\))?", r"Exercises",
+    ]:
+        text = re.sub(
+            rf"(?s)\n\s*{heading}\s*\n.+$", "", text, flags=re.IGNORECASE,
+        )
 
     # ---- Section headings ----
     if not keep_headings:
-        text = re.sub(r"(?m)^\d+\.\d+[\.\d]*\s+.+$", "", text)
+        # Numbered headings: "1.2 Title", "1.2.3 Title"
+        text = re.sub(r"(?m)^\d+[\.\d]*\s+.{0,80}$", "", text)
+        # "Chapter N" style
+        text = re.sub(r"(?m)^Chapter\s+\d+.*$", "", text, flags=re.IGNORECASE)
 
-    # ---- Conservative abbreviation expansion ----
+    # ---- Abbreviation expansion ----
     for pat, repl in [
-        (r"\be\.g\.\s",   "for example, "),
-        (r"\bi\.e\.\s",   "that is, "),
-        (r"\betc\.\b",    "etcetera"),
-        (r"\bvs\.\s",     "versus "),
-        (r"\bw\.r\.t\.\s","with respect to "),
+        (r"\be\.g\.\s",    "for example, "),
+        (r"\bi\.e\.\s",    "that is, "),
+        (r"\betc\.\b",     "etcetera"),
+        (r"\bvs\.\s",      "versus "),
+        (r"\bw\.r\.t\.\s", "with respect to "),
+        (r"\bfig\.\s",     "figure "),
+        (r"\beq\.\s",      "equation "),
     ]:
-        text = re.sub(pat, repl, text)
+        text = re.sub(pat, repl, text, flags=re.IGNORECASE)
+
+    # ---- Common symbols → spoken equivalents ----
+    _SYMBOL_MAP = {
+        "\u2192": " to ",        # →
+        "\u2190": " from ",      # ←
+        "\u2248": " approximately equal to ",  # ≈
+        "\u2264": " less than or equal to ",   # ≤
+        "\u2265": " greater than or equal to ",# ≥
+        "\u2260": " not equal to ",            # ≠
+        "\u221e": " infinity ",  # ∞
+        "\u00b0": " degrees ",   # °
+        "\u00b1": " plus or minus ",           # ±
+        "\u00d7": " times ",     # ×
+        "\u00f7": " divided by ",# ÷
+        "\u2014": ", ",          # em dash
+        "\u2013": " to ",        # en dash (often used for ranges)
+    }
+    for sym, word in _SYMBOL_MAP.items():
+        text = text.replace(sym, word)
+
+    # ---- Bullet / list markers ----
+    text = re.sub(
+        r"(?m)^[\u2022\u2023\u25e6\u2043\u2219\u25cf\u25cb\u25aa\u25ab\u2726\u2727]\s*",
+        "", text,
+    )
 
     # ---- Whitespace normalisation ----
     text = re.sub(r"\n{3,}", "\n\n", text)       # 3+ newlines → paragraph break
-    text = re.sub(r"[ \t]+", " ", text)           # collapse spaces
-    # Single newlines are just PDF line-wraps — join them into prose.
+    text = re.sub(r"[ \t]+", " ", text)           # collapse runs of spaces
+    # Single newlines are just line-wraps — join them into prose.
     # Double newlines (paragraph breaks) are preserved.
     text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
-
-    # ---- Footnote paragraphs ----
-    # OSTEP-style: "1Of course..." or "10We'll use..." (digit(s) glued to text)
-    text = re.sub(r"(?m)^\d{1,2}[A-Z][^\n]+$", "", text)
 
     # ---- Markdown artefacts ----
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
     text = re.sub(r"\*(.+?)\*", r"\1", text)
     text = re.sub(r"`(.+?)`", r"\1", text)
+    text = re.sub(r"(?m)^#{1,6}\s+", "", text)   # # Heading → Heading
 
     return text.strip()
+
+
+def _drop_if_allcaps(m: re.Match) -> str:
+    """Helper for all-caps header removal — only drop if actually all-caps."""
+    line = m.group(0).strip()
+    letters = [c for c in line if c.isalpha()]
+    if letters and all(c.isupper() for c in letters):
+        return ""
+    return m.group(0)
 
 
 # ---------------------------------------------------------------------------
