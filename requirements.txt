@@ -6,3 +6,6 @@ numpy
 fastapi
 uvicorn[standard]
 python-multipart
+ebooklib
+beautifulsoup4
+python-docx

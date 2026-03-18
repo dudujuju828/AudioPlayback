@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Convert PDF documents to audiobooks using Kokoro TTS."""
+"""Convert documents to audiobooks using Kokoro TTS.
+
+Supports PDF, EPUB, DOCX, HTML, and plain text input.
+"""
 
 import argparse
 import re
@@ -8,20 +11,23 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import fitz  # PyMuPDF
 import soundfile as sf
 from tqdm import tqdm
 
 SAMPLE_RATE = 24000
 PARAGRAPH_SILENCE_SEC = 0.5
 
+SUPPORTED_EXTENSIONS = {".pdf", ".epub", ".docx", ".html", ".htm", ".txt", ".md"}
+
 
 # ---------------------------------------------------------------------------
-# PDF extraction
+# Extraction — PDF
 # ---------------------------------------------------------------------------
 
 def extract_text(pdf_path: str) -> str:
     """Extract text from a PDF, handling multi-column layouts via block sorting."""
+    import fitz  # PyMuPDF
+
     doc = fitz.open(pdf_path)
     pages = []
     for page in doc:
@@ -30,6 +36,94 @@ def extract_text(pdf_path: str) -> str:
         pages.append("\n\n".join(texts))
     doc.close()
     return "\n\n".join(pages)
+
+
+# ---------------------------------------------------------------------------
+# Extraction — EPUB, DOCX, HTML, plain text
+# ---------------------------------------------------------------------------
+
+def extract_text_epub(epub_path: str) -> str:
+    """Extract text from an EPUB ebook."""
+    try:
+        import ebooklib
+        from ebooklib import epub
+        from bs4 import BeautifulSoup
+    except ImportError:
+        raise ImportError(
+            "EPUB support requires extra packages: "
+            "pip install ebooklib beautifulsoup4"
+        )
+
+    book = epub.read_epub(epub_path, options={"ignore_ncx": True})
+    chapters: list[str] = []
+    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+        soup = BeautifulSoup(item.get_content(), "html.parser")
+        text = soup.get_text(separator="\n")
+        if text.strip():
+            chapters.append(text.strip())
+    return "\n\n".join(chapters)
+
+
+def extract_text_docx(docx_path: str) -> str:
+    """Extract text from a Word document."""
+    try:
+        from docx import Document
+    except ImportError:
+        raise ImportError(
+            "DOCX support requires python-docx: pip install python-docx"
+        )
+
+    doc = Document(docx_path)
+    paragraphs: list[str] = []
+    for para in doc.paragraphs:
+        text = para.text.strip()
+        if text:
+            paragraphs.append(text)
+    return "\n\n".join(paragraphs)
+
+
+def extract_text_html(html_path: str) -> str:
+    """Extract readable text from an HTML file."""
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:
+        raise ImportError(
+            "HTML support requires beautifulsoup4: pip install beautifulsoup4"
+        )
+
+    with open(html_path, "r", encoding="utf-8", errors="replace") as f:
+        html = f.read()
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style", "nav"]):
+        tag.decompose()
+    return soup.get_text(separator="\n")
+
+
+def extract_text_plaintext(file_path: str) -> str:
+    """Read a plain text or Markdown file."""
+    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+        return f.read()
+
+
+def extract_text_from_file(file_path: str) -> str:
+    """Extract text from any supported document format."""
+    ext = Path(file_path).suffix.lower()
+    extractors = {
+        ".pdf": extract_text,
+        ".epub": extract_text_epub,
+        ".docx": extract_text_docx,
+        ".html": extract_text_html,
+        ".htm": extract_text_html,
+        ".txt": extract_text_plaintext,
+        ".md": extract_text_plaintext,
+    }
+    extractor = extractors.get(ext)
+    if extractor is None:
+        raise ValueError(
+            f"Unsupported file format: {ext}. "
+            f"Supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
+        )
+    return extractor(file_path)
 
 
 # ---------------------------------------------------------------------------
@@ -321,10 +415,14 @@ def test_tts() -> bool:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
+    fmts = ", ".join(sorted(SUPPORTED_EXTENSIONS))
     parser = argparse.ArgumentParser(
-        description="Convert a PDF document to an audiobook using Kokoro TTS",
+        description="Convert a document to an audiobook using Kokoro TTS",
     )
-    parser.add_argument("input", nargs="?", help="Path to input PDF file")
+    parser.add_argument(
+        "input", nargs="?",
+        help=f"Path to input document ({fmts})",
+    )
     parser.add_argument("-o", "--output", help="Output audio file path")
     parser.add_argument(
         "--voice", default="af_bella", help="Kokoro voice (default: af_bella)"
@@ -362,16 +460,20 @@ def main() -> None:
     if not args.input:
         parser.error("the following arguments are required: input")
 
-    pdf = Path(args.input)
-    if not pdf.exists():
-        print(f"Error: {pdf} not found")
+    infile = Path(args.input)
+    if not infile.exists():
+        print(f"Error: {infile} not found")
+        sys.exit(1)
+    if infile.suffix.lower() not in SUPPORTED_EXTENSIONS:
+        print(f"Error: unsupported format {infile.suffix}")
+        print(f"Supported: {fmts}")
         sys.exit(1)
 
-    out = args.output or str(pdf.with_suffix(f".{args.output_format}"))
+    out = args.output or str(infile.with_suffix(f".{args.output_format}"))
 
     # Step 1 — extract
-    print(f"Extracting text from {pdf}...")
-    raw = extract_text(str(pdf))
+    print(f"Extracting text from {infile}...")
+    raw = extract_text_from_file(str(infile))
     print(f"Extracted {len(raw):,} characters")
 
     # Step 2 — sanitise

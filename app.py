@@ -17,7 +17,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from pdf_to_audio import (
     PARAGRAPH_SILENCE_SEC,
     SAMPLE_RATE,
-    extract_text,
+    SUPPORTED_EXTENSIONS,
+    extract_text_from_file,
     sanitize_text,
     split_paragraphs,
 )
@@ -138,19 +139,38 @@ async def voices():
 
 
 @app.post("/upload")
-async def upload_pdf(file: UploadFile):
+async def upload_file(file: UploadFile):
+    ext = Path(file.filename).suffix.lower()
+    if ext not in SUPPORTED_EXTENSIONS:
+        return JSONResponse(
+            {"error": f"Unsupported file type: {ext}"},
+            status_code=400,
+        )
     file_id = uuid.uuid4().hex[:8]
-    save_path = UPLOAD_DIR / f"{file_id}.pdf"
+    save_path = UPLOAD_DIR / f"{file_id}{ext}"
     save_path.write_bytes(await file.read())
-    return {"id": file_id, "filename": file.filename}
+    return {"id": file_id, "filename": file.filename, "ext": ext}
+
+
+_MEDIA_TYPES = {
+    ".pdf": "application/pdf",
+    ".epub": "application/epub+zip",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".html": "text/html",
+    ".htm": "text/html",
+    ".txt": "text/plain",
+    ".md": "text/plain",
+}
 
 
 @app.get("/uploads/{file_id}")
 async def serve_upload(file_id: str):
-    path = UPLOAD_DIR / f"{file_id}.pdf"
-    if path.exists():
-        return FileResponse(str(path), media_type="application/pdf")
-    return JSONResponse({"error": "not found"}, status_code=404)
+    matches = list(UPLOAD_DIR.glob(f"{file_id}.*"))
+    if not matches:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    path = matches[0]
+    media = _MEDIA_TYPES.get(path.suffix.lower(), "application/octet-stream")
+    return FileResponse(str(path), media_type=media)
 
 
 @app.get("/audio/{filename}")
@@ -174,11 +194,17 @@ async def ws_generate(ws: WebSocket):
         keep_code = data.get("keep_code", False)
 
         # Extract
-        if mode == "pdf":
-            pdf_id = data.get("pdf_id")
-            pdf_path = str(UPLOAD_DIR / f"{pdf_id}.pdf")
-            await ws.send_json({"type": "status", "message": "Extracting text from PDF..."})
-            raw_text = await asyncio.to_thread(extract_text, pdf_path)
+        file_ext = None
+        if mode in ("pdf", "file"):
+            file_id = data.get("pdf_id")
+            matches = list(UPLOAD_DIR.glob(f"{file_id}.*"))
+            if not matches:
+                await ws.send_json({"type": "error", "message": "Uploaded file not found"})
+                return
+            file_path = str(matches[0])
+            file_ext = matches[0].suffix.lower()
+            await ws.send_json({"type": "status", "message": "Extracting text..."})
+            raw_text = await asyncio.to_thread(extract_text_from_file, file_path)
             await ws.send_json({"type": "status", "message": f"Extracted {len(raw_text):,} characters"})
         else:
             raw_text = data.get("text", "")
@@ -239,6 +265,7 @@ async def ws_generate(ws: WebSocket):
             "timecodes": timecodes,
             "clean_text": clean,
             "pdf_id": data.get("pdf_id"),
+            "file_ext": file_ext if mode in ("pdf", "file") else None,
         })
 
     except WebSocketDisconnect:

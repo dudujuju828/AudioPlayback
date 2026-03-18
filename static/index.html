@@ -221,12 +221,13 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; background: v
 <div id="setup-view">
   <div class="setup-card">
     <h1>AudioPlayback</h1>
-    <p class="subtitle">Convert PDFs to audiobooks with AI narration</p>
+    <p class="subtitle">Convert documents to audiobooks with AI narration</p>
 
     <div id="drop-zone">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L8 8m4-4l4 4M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2"/></svg>
-      <p>Drop a PDF here, or click to browse</p>
-      <input type="file" id="file-input" accept=".pdf">
+      <p>Drop a file here, or click to browse</p>
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem">PDF, EPUB, DOCX, HTML, TXT, Markdown</p>
+      <input type="file" id="file-input" accept=".pdf,.epub,.docx,.html,.htm,.txt,.md">
       <div id="file-info" class="hidden">
         <span id="file-name"></span>
         <button id="file-clear" title="Remove">&times;</button>
@@ -418,7 +419,10 @@ dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-ove
 dropZone.addEventListener('drop', e => {
   e.preventDefault(); dropZone.classList.remove('drag-over');
   const f = e.dataTransfer.files[0];
-  if (f && f.type === 'application/pdf') uploadFile(f);
+  if (f) {
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (['pdf','epub','docx','html','htm','txt','md'].includes(ext)) uploadFile(f);
+  }
 });
 fileInput.addEventListener('change', () => { if (fileInput.files[0]) uploadFile(fileInput.files[0]); });
 fileClear.addEventListener('click', e => {
@@ -451,7 +455,7 @@ function startGeneration() {
   ws.onopen = () => {
     const msg = { voice: voiceSelect.value, speed: parseFloat(speedSlider.value),
                   keep_headings: keepHead.checked, keep_code: keepCode.checked };
-    if (state.pdfId) { msg.mode = 'pdf'; msg.pdf_id = state.pdfId; }
+    if (state.pdfId) { msg.mode = 'file'; msg.pdf_id = state.pdfId; }
     else { msg.mode = 'text'; msg.text = textInput.value; }
     ws.send(JSON.stringify(msg));
   };
@@ -486,9 +490,10 @@ function onGenerationDone(data) {
     textCont.appendChild(div);
   });
 
-  // PDF toggle
-  if (data.pdf_id) { btnPdfView.classList.remove('hidden'); pdfViewer.src = `/uploads/${data.pdf_id}`; }
-  else { btnPdfView.classList.add('hidden'); }
+  // PDF viewer toggle — only for actual PDF uploads
+  if (data.pdf_id && data.file_ext === '.pdf') {
+    btnPdfView.classList.remove('hidden'); pdfViewer.src = `/uploads/${data.pdf_id}`;
+  } else { btnPdfView.classList.add('hidden'); }
 
   // Reset quiz panel
   quizEmpty.classList.remove('hidden');
